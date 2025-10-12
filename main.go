@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
+	"github.com/welasco/adguardfilter/adguardapi"
 	logger "github.com/welasco/adguardfilter/common/logger"
 	"github.com/welasco/adguardfilter/common/timer"
 	"github.com/welasco/adguardfilter/transport"
@@ -53,6 +54,16 @@ func main() {
 		logger.Info("[main][main] Stopping ", len(activeTimers), " active timer(s)")
 		timer.StopAllTimers()
 		logger.Info("[main][main] All timers stopped")
+
+		// Reset blocked services to default
+		err := adguardapi.ResetBlockedServices()
+		if err != nil {
+			logger.Error("[main][main] Failed to reset blocked services")
+			logger.Error(err)
+		} else {
+			logger.Info("[main][main] Successfully reset blocked services to default")
+		}
+
 	} else {
 		logger.Info("[main][main] No active timers to stop")
 	}
