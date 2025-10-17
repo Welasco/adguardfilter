@@ -33,7 +33,7 @@ func Setup() *fiber.App {
 	app := fiber.New()
 
 	if os.Getenv("Environment") == "Dev" {
-		app.Static("/", "./frontend/dist")
+		app.Static("/", "./frontend-adguardfilter/dist")
 	} else {
 		app.Static("/", "./public")
 	}

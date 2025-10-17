@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 
+// @ts-ignore
+const apiURL = window.base_url;
+
 interface BlockedService {
   id: string
   name: string
@@ -47,8 +50,8 @@ function App() {
         setLoading(true)
 
         // Fetch the list of all services
-        console.log('Fetching services from http://localhost:3000/api/v1/getservicelist')
-        const servicesResponse = await fetch('http://localhost:3000/api/v1/getservicelist', {
+        console.log('Deu Certo Fetching services from ' + apiURL + '/api/v1/getservicelist')
+        const servicesResponse = await fetch(apiURL + '/api/v1/getservicelist', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -68,8 +71,8 @@ function App() {
         setBlockedServices(servicesData)
 
         // Fetch the currently blocked services
-        console.log('Fetching blocked services from http://localhost:3000/api/v1/getblockedservices')
-        const blockedResponse = await fetch('http://localhost:3000/api/v1/getblockedservices', {
+        console.log('Fetching blocked services from ' + apiURL + '/api/v1/getblockedservices')
+        const blockedResponse = await fetch(apiURL + '/api/v1/getblockedservices', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -110,7 +113,7 @@ function App() {
   useEffect(() => {
     const fetchTimer = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/v1/gettimer', {
+        const response = await fetch(apiURL + '/api/v1/gettimer', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -211,7 +214,7 @@ function App() {
           return
         }
 
-        endpoint = 'http://localhost:3000/api/v1/updateblockedservicesmin'
+        endpoint = apiURL + '/api/v1/updateblockedservicesmin'
         payload = {
           config: {
             schedule: {
@@ -238,7 +241,7 @@ function App() {
 
         const formattedDateTime = datetime.toISOString().slice(0, 19)
 
-        endpoint = 'http://localhost:3000/api/v1/updateblockedservicesdatetime'
+        endpoint = apiURL + '/api/v1/updateblockedservicesdatetime'
         payload = {
           config: {
             schedule: {
