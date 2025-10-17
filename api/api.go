@@ -240,3 +240,51 @@ func ApiUpdateBlockedServicesDateTime(c *fiber.Ctx) error {
 		"current_time":     time.Now().Format(time.RFC3339),
 	})
 }
+
+// ApiGetTimer retrieves information about the currently active timer
+func ApiGetTimer(c *fiber.Ctx) error {
+	// Get all active timers (should be at most one)
+	activeTimers := timer.GetAllActiveTimers()
+
+	logger.Debug("[api][ApiGetTimer] Number of active timers: ", len(activeTimers))
+
+	// Check if there's an active timer
+	if len(activeTimers) == 0 {
+		logger.Info("[api][ApiGetTimer] No active timer found")
+		return c.JSON(fiber.Map{
+			"is_active": false,
+			"message":   "No active timer",
+		})
+	}
+
+	// Get the first (and only) active timer
+	timerID := activeTimers[0]
+	activeTimer, exists := timer.GetTimer(timerID)
+	if !exists || !activeTimer.IsActive() {
+		logger.Warning("[api][ApiGetTimer] Timer '" + timerID + "' is not active or not found")
+		return c.JSON(fiber.Map{
+			"is_active": false,
+			"message":   "No active timer",
+		})
+	}
+
+	// Calculate remaining time
+	expireTime := activeTimer.GetExpireTime()
+	timeRemaining := time.Until(expireTime)
+
+	logger.Info("[api][ApiGetTimer] Active timer found: " + timerID)
+	logger.Debug("[api][ApiGetTimer] Expire time: " + expireTime.Format(time.RFC3339))
+	logger.Debug("[api][ApiGetTimer] Time remaining: " + timeRemaining.String())
+
+	// Format response
+	return c.JSON(fiber.Map{
+		"is_active":      true,
+		"timer_id":       timerID,
+		"expire_time":    expireTime.Format(time.RFC3339),
+		"current_time":   time.Now().Format(time.RFC3339),
+		"time_remaining": timeRemaining.String(),
+		"seconds_left":   int64(timeRemaining.Seconds()),
+		"minutes_left":   int64(timeRemaining.Minutes()),
+		"message":        "Active timer found",
+	})
+}

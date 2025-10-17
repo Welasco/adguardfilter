@@ -19,6 +19,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/api/v1/getblockedservices", api.ApiGetBlockedServices)
 	//app.Get("/api/v1/blockedservices", api.ApiGetServiceList)
 	app.Get("/api/v1/getservicelist", api.ApiGetServiceList)
+	app.Get("/api/v1/gettimer", api.ApiGetTimer)
 	app.Put("/api/v1/updateblockedservicesmin", api.ApiUpdateBlockedServicesMin)
 	app.Post("/api/v1/updateblockedservicesmin", api.ApiUpdateBlockedServicesMin)
 	app.Put("/api/v1/updateblockedservicesdatetime", api.ApiUpdateBlockedServicesDateTime)
