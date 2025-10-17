@@ -15,6 +15,17 @@ interface BlockedServicesResponse {
   }
 }
 
+interface TimerResponse {
+  is_active: boolean
+  timer_id?: string
+  expire_time?: string
+  current_time?: string
+  time_remaining?: string
+  seconds_left?: number
+  minutes_left?: number
+  message: string
+}
+
 function App() {
   const [blockedServices, setBlockedServices] = useState<BlockedService[]>([])
   const [enabledServices, setEnabledServices] = useState<Set<string>>(new Set())
@@ -26,6 +37,8 @@ function App() {
   const [resetMode, setResetMode] = useState<'minutes' | 'datetime' | null>(null)
   const [saveLoading, setSaveLoading] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [activeTimer, setActiveTimer] = useState<TimerResponse | null>(null)
+  const [timerCountdown, setTimerCountdown] = useState<number>(0)
 
   // Fetch blocked services from API
   useEffect(() => {
@@ -91,6 +104,64 @@ function App() {
     }
 
     fetchBlockedServices()
+  }, [])
+
+  // Fetch and monitor active timer
+  useEffect(() => {
+    const fetchTimer = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/v1/gettimer', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch timer: ${response.statusText}`)
+        }
+
+        const timerData: TimerResponse = await response.json()
+        console.log('Timer data:', timerData)
+
+        if (timerData.is_active && timerData.seconds_left !== undefined) {
+          setActiveTimer(timerData)
+          setTimerCountdown(timerData.seconds_left)
+        } else {
+          setActiveTimer(null)
+          setTimerCountdown(0)
+        }
+      } catch (err) {
+        console.error('Error fetching timer:', err)
+        setActiveTimer(null)
+        setTimerCountdown(0)
+      }
+    }
+
+    // Fetch timer immediately on mount
+    fetchTimer()
+
+    // Set up interval to update timer every second
+    const timerInterval = setInterval(() => {
+      setTimerCountdown(prev => {
+        if (prev <= 1) {
+          // Timer expired, fetch again to confirm
+          fetchTimer()
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    // Set up interval to refresh timer from API every 5 seconds
+    const refreshInterval = setInterval(() => {
+      fetchTimer()
+    }, 5000)
+
+    return () => {
+      clearInterval(timerInterval)
+      clearInterval(refreshInterval)
+    }
   }, [])
 
   // Handle toggle for a service
@@ -211,6 +282,23 @@ function App() {
     }
   }
 
+  // Format remaining time in a human-readable way
+  const formatTimeRemaining = (seconds: number): string => {
+    if (seconds <= 0) return 'Expired'
+
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secs = seconds % 60
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`
+    } else {
+      return `${secs}s`
+    }
+  }
+
   // Convert IconSVG byte array to data URL
   const iconToDataUrl = (icon_svg: string | Uint8Array | undefined | null): string => {
     if (!icon_svg) {
@@ -305,6 +393,31 @@ function App() {
             Manage and control blocked services
           </p>
         </div>
+
+        {/* Active Timer Banner */}
+        {timerCountdown > 0 && activeTimer?.is_active && (
+          <div className="mb-6 p-4 rounded-lg bg-yellow-100 border-2 border-yellow-400 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">⏱️</span>
+                <div>
+                  <p className="font-semibold text-yellow-900">
+                    Service Block Active
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    Services will be reset in: <span className="font-bold text-lg">{formatTimeRemaining(timerCountdown)}</span>
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-yellow-700">Expires at</p>
+                <p className="text-sm font-semibold text-yellow-900">
+                  {activeTimer?.expire_time ? new Date(activeTimer.expire_time).toLocaleTimeString() : ''}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search Bar */}
         <div className="mb-6">
