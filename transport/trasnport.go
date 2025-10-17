@@ -17,11 +17,13 @@ func helloWorld(c *fiber.Ctx) error {
 func setupRoutes(app *fiber.App) {
 	app.Get("/", helloWorld)
 	app.Get("/api/v1/getblockedservices", api.ApiGetBlockedServices)
+	//app.Get("/api/v1/blockedservices", api.ApiGetServiceList)
+	app.Get("/api/v1/getservicelist", api.ApiGetServiceList)
 	app.Put("/api/v1/updateblockedservicesmin", api.ApiUpdateBlockedServicesMin)
 	app.Post("/api/v1/updateblockedservicesmin", api.ApiUpdateBlockedServicesMin)
 	app.Put("/api/v1/updateblockedservicesdatetime", api.ApiUpdateBlockedServicesDateTime)
 	app.Post("/api/v1/updateblockedservicesdatetime", api.ApiUpdateBlockedServicesDateTime)
-	app.Get("/api/v1/getservicelist", api.ApiGetServiceList)
+
 }
 
 // Setup - set's up our fiber app and the routes
