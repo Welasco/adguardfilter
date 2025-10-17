@@ -1,5 +1,5 @@
 # Build the application from source
-FROM golang:1.21 AS build-go
+FROM golang:1.25 AS build-go
 
 WORKDIR /app
 
@@ -12,7 +12,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /adguardfilter
 #######################################################################
 
 # Build fronend from source
-FROM node:21-bookworm AS build-frontend
+FROM node:22-trixie AS build-frontend
 WORKDIR /app
 COPY . .
 RUN cd /app/frontend-adguardfilter \
