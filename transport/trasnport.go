@@ -21,6 +21,7 @@ func setupRoutes(app *fiber.App) {
 	app.Post("/api/v1/updateblockedservicesmin", api.ApiUpdateBlockedServicesMin)
 	app.Put("/api/v1/updateblockedservicesdatetime", api.ApiUpdateBlockedServicesDateTime)
 	app.Post("/api/v1/updateblockedservicesdatetime", api.ApiUpdateBlockedServicesDateTime)
+	app.Get("/api/v1/getservicelist", api.ApiGetServiceList)
 }
 
 // Setup - set's up our fiber app and the routes
