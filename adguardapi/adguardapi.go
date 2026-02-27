@@ -67,6 +67,55 @@ func GetBlockedServices() (model.ServiceConfig, error) {
 	return serviceConfig, nil
 }
 
+// GetAllBlockedServices retrieves all available blocked services from the API
+func GetAllBlockedServices() ([]model.BlockedService, error) {
+	apiURL := authBaseURL + "/control/blocked_services/all"
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to create GET request")
+		logger.Error(err)
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json, text/plain, */*")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
+	resp, err := DoAuthenticatedRequest(req)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to get all blocked services from: " + apiURL)
+		logger.Error(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		logger.Error("[adguardapi][GetAllBlockedServices] Request failed with status: " + resp.Status)
+		return nil, errors.New("request failed with status: " + resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to read response body")
+		logger.Error(err)
+		return nil, err
+	}
+
+	logger.Debug("[adguardapi][GetAllBlockedServices] Response body: " + string(body))
+
+	var allServicesResp model.AllBlockedServicesResponse
+	err = json.Unmarshal(body, &allServicesResp)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to unmarshal JSON response")
+		logger.Error(err)
+		return nil, err
+	}
+
+	logger.Info("[adguardapi][GetAllBlockedServices] Successfully retrieved all blocked services")
+	logger.Debug("[adguardapi][GetAllBlockedServices] Number of services: ", len(allServicesResp.BlockedServices))
+
+	return allServicesResp.BlockedServices, nil
+}
+
 // UpdateBlockedServices updates the blocked services configuration via the API
 func UpdateBlockedServices(serviceConfig *model.ServiceConfig) error {
 

@@ -22,3 +22,9 @@ type ResetServiceDateTimeConfig struct {
 	ServiceConfig ServiceConfig `json:"config"`
 	ResetDateTime string        `json:"reset_date_time"` // ISO 8601 datetime string (e.g., "2025-10-12T15:30:00Z")
 }
+
+// AllBlockedServicesResponse represents the response from /control/blocked_services/all
+type AllBlockedServicesResponse struct {
+	BlockedServices []BlockedService `json:"blocked_services"`
+	Groups          []ServiceGroup   `json:"groups"`
+}
