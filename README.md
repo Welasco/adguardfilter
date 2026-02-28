@@ -15,11 +15,10 @@ A web application that integrates with [AdGuard Home](https://adguard.com/en/adg
 
 ## Architecture
 
-```
-┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
-│  React Frontend  │──────▶│   Go Backend     │──────▶│  AdGuard Home    │
-│  (Vite + TS)     │       │  (Fiber v2)      │       │  API             │
-└──────────────────┘       └──────────────────┘       └──────────────────┘
+```mermaid
+graph LR
+    A["🌐 React Frontend<br/>(Vite + TypeScript + Tailwind)"] -->|"HTTP"| B["⚙️ Go Backend<br/>(Fiber v2)"]
+    B -->|"HTTP"| C["🛡️ AdGuard Home<br/>API"]
 ```
 
 - **Backend**: Go 1.25 with [Fiber](https://gofiber.io/) v2
