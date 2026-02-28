@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"strings"
 
 	logger "github.com/welasco/adguardfilter/common/logger"
 	"github.com/welasco/adguardfilter/model"
@@ -176,26 +178,37 @@ func UpdateBlockedServices(serviceConfig *model.ServiceConfig) error {
 
 // ResetBlockedServices resets all blocked services to the default list
 func ResetBlockedServices() error {
-	// Define the default blocked services configuration
+	// Default blocked service IDs
+	defaultIDs := []string{
+		"tinder", "plenty_of_fish", "onlyfans", "playstation", "nintendo", "tiktok",
+		"aliexpress", "500px", "activision_blizzard", "battle_net", "betway", "blaze",
+		"box", "crunchyroll", "directvgo", "disneyplus", "ebay", "espn", "flickr",
+		"iheartradio", "iqiyi", "kook", "line", "mercado_libre", "ok", "origin", "qq",
+		"riot_games", "signal", "tidal", "tumblr", "ubisoft", "vimeo", "wargaming",
+		"xiaohongshu", "zhihu", "yy", "weibo", "wechat", "voot", "viber", "twitch",
+		"wizz", "shein", "paramountplus", "pluto_tv", "mail_ru", "kakaotalk", "imgur",
+		"hulu", "globoplay", "dailymotion", "clubhouse", "canais_globo", "betano",
+		"bigo_live", "amino", "9gag", "betfair", "bilibili", "bluesky", "claro",
+		"coolapk", "deezer", "kik", "leagueoflegends", "lionsgateplus", "mastodon",
+		"rockstar_games", "temu", "telegram", "soundcloud", "samsung_tv_plus", "looke",
+		"hbomax", "discoveryplus", "gog", "nebula", "facebook", "privacy", "snapchat",
+		"youtube", "roblox", "spotify_video", "spotify",
+	}
+
+	// Override with env var if set (comma-separated list of service IDs)
+	if envIDs := os.Getenv("defaultBlockedServices"); envIDs != "" {
+		logger.Info("[adguardapi][ResetBlockedServices] Loading default blocked services from environment variable")
+		defaultIDs = strings.Split(envIDs, ",")
+		for i := range defaultIDs {
+			defaultIDs[i] = strings.TrimSpace(defaultIDs[i])
+		}
+	}
+
 	defaultConfig := model.ServiceConfig{
 		Schedule: model.Schedule{
 			TimeZone: "America/Chicago",
 		},
-		IDs: []string{
-			"tinder", "plenty_of_fish", "onlyfans", "playstation", "nintendo", "tiktok",
-			"aliexpress", "500px", "activision_blizzard", "battle_net", "betway", "blaze",
-			"box", "crunchyroll", "directvgo", "disneyplus", "ebay", "espn", "flickr",
-			"iheartradio", "iqiyi", "kook", "line", "mercado_libre", "ok", "origin", "qq",
-			"riot_games", "signal", "tidal", "tumblr", "ubisoft", "vimeo", "wargaming",
-			"xiaohongshu", "zhihu", "yy", "weibo", "wechat", "voot", "viber", "twitch",
-			"wizz", "shein", "paramountplus", "pluto_tv", "mail_ru", "kakaotalk", "imgur",
-			"hulu", "globoplay", "dailymotion", "clubhouse", "canais_globo", "betano",
-			"bigo_live", "amino", "9gag", "betfair", "bilibili", "bluesky", "claro",
-			"coolapk", "deezer", "kik", "leagueoflegends", "lionsgateplus", "mastodon",
-			"rockstar_games", "temu", "telegram", "soundcloud", "samsung_tv_plus", "looke",
-			"hbomax", "discoveryplus", "gog", "nebula", "facebook", "privacy", "snapchat",
-			"youtube", "roblox", "spotify_video", "spotify",
-		},
+		IDs: defaultIDs,
 	}
 
 	logger.Info("[adguardapi][ResetBlockedServices] Resetting blocked services to default configuration")
