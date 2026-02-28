@@ -459,7 +459,33 @@ function App() {
               <label className="block text-white font-semibold mb-2">
                 Block Duration (minutes)
               </label>
-                            <input
+              <div className="flex gap-2 mb-2">
+                {[
+                  { label: '1h', minutes: 60 },
+                  { label: '2h', minutes: 120 },
+                  { label: '4h', minutes: 240 },
+                  { label: '8h', minutes: 480 },
+                  { label: '3d', minutes: 4320 },
+                ].map(preset => (
+                  <button
+                    key={preset.minutes}
+                    onClick={() => {
+                      setResetMinutes(preset.minutes)
+                      setResetMode('minutes')
+                      setResetDateTime('')
+                    }}
+                    disabled={resetMode === 'datetime'}
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
+                      resetMinutes === preset.minutes && resetMode === 'minutes'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-40'
+                    } ${resetMode === 'datetime' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <input
                 type="number"
                 min="0"
                 value={resetMinutes}
