@@ -15,10 +15,18 @@ A web application that integrates with [AdGuard Home](https://adguard.com/en/adg
 
 ## Architecture
 
+<<<<<<< HEAD
 ```mermaid
 graph LR
     A["🌐 React Frontend<br/>(Vite + TypeScript + Tailwind)"] -->|"HTTP"| B["⚙️ Go Backend<br/>(Fiber v2)"]
     B -->|"HTTP"| C["🛡️ AdGuard Home<br/>API"]
+=======
+```
+┌──────────────────┐       ┌──────────────────┐       ┌──────────────────┐
+│  React Frontend  │──────▶│   Go Backend     │──────▶│  AdGuard Home    │
+│  (Vite + TS)     │       │  (Fiber v2)      │       │  API             │
+└──────────────────┘       └──────────────────┘       └──────────────────┘
+>>>>>>> ce31d001153554dfeff18f0ea42599bb0b7456b8
 ```
 
 - **Backend**: Go 1.25 with [Fiber](https://gofiber.io/) v2
@@ -92,7 +100,11 @@ PORT=3000                                        # Server port (default: 3000)
 
 3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-> In `Dev` mode the frontend is served from `./frontend-adguardfilter/dist`. For frontend development with hot reload, run `npm run dev` inside `frontend-adguardfilter/` and point it at the backend.
+> In `Dev` mode the production server serves the built frontend from `./frontend-adguardfilter/dist`.
+> For **frontend development with hot reload**, run `npm run dev` inside `frontend-adguardfilter/` and ensure that API requests reach the Go backend at `http://localhost:3000/api/v1/...`:
+>
+> - Option 1: Set `window.base_url` in `frontend-adguardfilter/index.html` to `http://localhost:3000` so the frontend calls the backend directly.
+> - Option 2: Keep `window.base_url = "/api/"` and configure your dev server (e.g. Vite proxy) to forward `/api` to `http://localhost:3000` **without** adding another `/api` segment (so requests stay as `/api/v1/...`, not `/api//api/v1/...`).
 
 ### Docker
 
@@ -158,7 +170,7 @@ curl -X POST http://localhost:3000/api/v1/updateblockedservicesdatetime \
 | `authPassword` | Yes | — | AdGuard Home admin password |
 | `PORT` | No | `3000` | Server listen port |
 | `Environment` | No | — | Set to `Dev` to serve frontend from local build |
-| `backendUri` | No | `http://localhost:3000` | Backend URI injected into frontend |
+| `backendUri` | No | (empty) | Backend URI injected into frontend at container startup; if unset, it is left blank (frontend uses same-origin) |
 | `logLevel` | No | — | Logging level (`Deb`, `Info`, `Warn`, `Err`) |
 | `logPath` | No | — | Log file path prefix |
 | `defaultBlockedServices` | No | Built-in list | Comma-separated service IDs for the default reset configuration |
