@@ -7,17 +7,22 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/welasco/adguardfilter/adguardapi"
 	logger "github.com/welasco/adguardfilter/common/logger"
-	"github.com/welasco/adguardfilter/common/servicelist"
 	"github.com/welasco/adguardfilter/common/timer"
 	"github.com/welasco/adguardfilter/model"
 )
 
 // ApiGetServiceList retrieves the list of available services from the API
 func ApiGetServiceList(c *fiber.Ctx) error {
-	// Retrieve the service list via the adguardapi package
-	var serviceList = servicelist.GetBlockedServices()
+	serviceList, err := adguardapi.GetAllBlockedServices()
+	if err != nil {
+		logger.Error("[api][ApiGetServiceList] Failed to get service list")
+		logger.Error(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Failed to get service list",
+		})
+	}
 
-	logger.Info("[adguardapi][ApiGetServiceList] Successfully retrieved service list")
+	logger.Info("[api][ApiGetServiceList] Successfully retrieved service list")
 	return c.JSON(&serviceList)
 }
 

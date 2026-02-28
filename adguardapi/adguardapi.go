@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"os"
+	"strings"
 
 	logger "github.com/welasco/adguardfilter/common/logger"
 	"github.com/welasco/adguardfilter/model"
@@ -65,6 +67,55 @@ func GetBlockedServices() (model.ServiceConfig, error) {
 	logger.Debug("[adguardapi][GetBlockedServices] Timezone: " + serviceConfig.Schedule.TimeZone)
 
 	return serviceConfig, nil
+}
+
+// GetAllBlockedServices retrieves all available blocked services from the API
+func GetAllBlockedServices() ([]model.BlockedService, error) {
+	apiURL := authBaseURL + "/control/blocked_services/all"
+	req, err := http.NewRequest("GET", apiURL, nil)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to create GET request")
+		logger.Error(err)
+		return nil, err
+	}
+
+	req.Header.Set("Accept", "application/json, text/plain, */*")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
+	resp, err := DoAuthenticatedRequest(req)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to get all blocked services from: " + apiURL)
+		logger.Error(err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		logger.Error("[adguardapi][GetAllBlockedServices] Request failed with status: " + resp.Status)
+		return nil, errors.New("request failed with status: " + resp.Status)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to read response body")
+		logger.Error(err)
+		return nil, err
+	}
+
+	logger.Debug("[adguardapi][GetAllBlockedServices] Response body: " + string(body))
+
+	var allServicesResp model.AllBlockedServicesResponse
+	err = json.Unmarshal(body, &allServicesResp)
+	if err != nil {
+		logger.Error("[adguardapi][GetAllBlockedServices] Failed to unmarshal JSON response")
+		logger.Error(err)
+		return nil, err
+	}
+
+	logger.Info("[adguardapi][GetAllBlockedServices] Successfully retrieved all blocked services")
+	logger.Debug("[adguardapi][GetAllBlockedServices] Number of services: ", len(allServicesResp.BlockedServices))
+
+	return allServicesResp.BlockedServices, nil
 }
 
 // UpdateBlockedServices updates the blocked services configuration via the API
@@ -127,26 +178,37 @@ func UpdateBlockedServices(serviceConfig *model.ServiceConfig) error {
 
 // ResetBlockedServices resets all blocked services to the default list
 func ResetBlockedServices() error {
-	// Define the default blocked services configuration
+	// Default blocked service IDs
+	defaultIDs := []string{
+		"tinder", "plenty_of_fish", "onlyfans", "playstation", "nintendo", "tiktok",
+		"aliexpress", "500px", "activision_blizzard", "battle_net", "betway", "blaze",
+		"box", "crunchyroll", "directvgo", "disneyplus", "ebay", "espn", "flickr",
+		"iheartradio", "iqiyi", "kook", "line", "mercado_libre", "ok", "origin", "qq",
+		"riot_games", "signal", "tidal", "tumblr", "ubisoft", "vimeo", "wargaming",
+		"xiaohongshu", "zhihu", "yy", "weibo", "wechat", "voot", "viber", "twitch",
+		"wizz", "shein", "paramountplus", "pluto_tv", "mail_ru", "kakaotalk", "imgur",
+		"hulu", "globoplay", "dailymotion", "clubhouse", "canais_globo", "betano",
+		"bigo_live", "amino", "9gag", "betfair", "bilibili", "bluesky", "claro",
+		"coolapk", "deezer", "kik", "leagueoflegends", "lionsgateplus", "mastodon",
+		"rockstar_games", "temu", "telegram", "soundcloud", "samsung_tv_plus", "looke",
+		"hbomax", "discoveryplus", "gog", "nebula", "facebook", "privacy", "snapchat",
+		"youtube", "roblox", "spotify_video", "spotify",
+	}
+
+	// Override with env var if set (comma-separated list of service IDs)
+	if envIDs := os.Getenv("defaultBlockedServices"); envIDs != "" {
+		logger.Info("[adguardapi][ResetBlockedServices] Loading default blocked services from environment variable")
+		defaultIDs = strings.Split(envIDs, ",")
+		for i := range defaultIDs {
+			defaultIDs[i] = strings.TrimSpace(defaultIDs[i])
+		}
+	}
+
 	defaultConfig := model.ServiceConfig{
 		Schedule: model.Schedule{
 			TimeZone: "America/Chicago",
 		},
-		IDs: []string{
-			"tinder", "plenty_of_fish", "onlyfans", "playstation", "nintendo", "tiktok",
-			"aliexpress", "500px", "activision_blizzard", "battle_net", "betway", "blaze",
-			"box", "crunchyroll", "directvgo", "disneyplus", "ebay", "espn", "flickr",
-			"iheartradio", "iqiyi", "kook", "line", "mercado_libre", "ok", "origin", "qq",
-			"riot_games", "signal", "tidal", "tumblr", "ubisoft", "vimeo", "wargaming",
-			"xiaohongshu", "zhihu", "yy", "weibo", "wechat", "voot", "viber", "twitch",
-			"wizz", "shein", "paramountplus", "pluto_tv", "mail_ru", "kakaotalk", "imgur",
-			"hulu", "globoplay", "dailymotion", "clubhouse", "canais_globo", "betano",
-			"bigo_live", "amino", "9gag", "betfair", "bilibili", "bluesky", "claro",
-			"coolapk", "deezer", "kik", "leagueoflegends", "lionsgateplus", "mastodon",
-			"rockstar_games", "temu", "telegram", "soundcloud", "samsung_tv_plus", "looke",
-			"hbomax", "discoveryplus", "gog", "nebula", "facebook", "privacy", "snapchat",
-			"youtube", "roblox", "spotify_video", "spotify",
-		},
+		IDs: defaultIDs,
 	}
 
 	logger.Info("[adguardapi][ResetBlockedServices] Resetting blocked services to default configuration")

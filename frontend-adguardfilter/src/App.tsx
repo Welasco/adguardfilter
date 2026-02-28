@@ -347,6 +347,25 @@ function App() {
     }
   }
 
+  // Quick group: services that can be toggled together
+  const quickGroupIds = ['youtube', 'roblox', 'spotify', 'spotify_video']
+
+  const quickGroupServices = blockedServices.filter(s => quickGroupIds.includes(s.id))
+
+  const allQuickGroupEnabled = quickGroupIds.length > 0 && quickGroupIds.every(id => enabledServices.has(id))
+
+  const handleToggleQuickGroup = () => {
+    setEnabledServices(prev => {
+      const newSet = new Set(prev)
+      if (allQuickGroupEnabled) {
+        quickGroupIds.forEach(id => newSet.delete(id))
+      } else {
+        quickGroupIds.forEach(id => newSet.add(id))
+      }
+      return newSet
+    })
+  }
+
   // Filter services based on search term
   const filteredServices = blockedServices.filter(service => {
     const name = service.name || ''
@@ -440,7 +459,33 @@ function App() {
               <label className="block text-white font-semibold mb-2">
                 Block Duration (minutes)
               </label>
-                            <input
+              <div className="flex gap-2 mb-2">
+                {[
+                  { label: '1h', minutes: 60 },
+                  { label: '2h', minutes: 120 },
+                  { label: '4h', minutes: 240 },
+                  { label: '8h', minutes: 480 },
+                  { label: '3d', minutes: 4320 },
+                ].map(preset => (
+                  <button
+                    key={preset.minutes}
+                    onClick={() => {
+                      setResetMinutes(preset.minutes)
+                      setResetMode('minutes')
+                      setResetDateTime('')
+                    }}
+                    disabled={resetMode === 'datetime'}
+                    className={`px-3 py-1 rounded-lg text-sm font-semibold transition-colors ${
+                      resetMinutes === preset.minutes && resetMode === 'minutes'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white bg-opacity-20 text-white hover:bg-opacity-40'
+                    } ${resetMode === 'datetime' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+              <input
                 type="number"
                 min="0"
                 value={resetMinutes}
@@ -522,6 +567,48 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Quick Group */}
+      {quickGroupServices.length > 0 && (
+        <div className="max-w-7xl mx-auto mb-6">
+          <div className="bg-white rounded-lg shadow-lg p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex -space-x-2">
+                  {quickGroupServices.map(service => (
+                    <div
+                      key={service.id}
+                      className="w-10 h-10 bg-gray-100 rounded-full border-2 border-white flex items-center justify-center overflow-hidden"
+                      title={service.name}
+                    >
+                      <img
+                        src={iconToDataUrl(service.icon_svg)}
+                        alt={service.name}
+                        className="w-full h-full object-contain p-1"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">Quick Block</h3>
+                  <p className="text-sm text-gray-500">
+                    {quickGroupServices.map(s => s.name).join(', ')}
+                  </p>
+                </div>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={allQuickGroupEnabled}
+                  onChange={handleToggleQuickGroup}
+                  className="sr-only peer"
+                />
+                <div className="w-14 h-7 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Services Grid */}
       <div className="max-w-7xl mx-auto">
